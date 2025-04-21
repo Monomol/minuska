@@ -3706,7 +3706,7 @@ Fixpoint u_insert_many {Σ : StaticModel} {u_ops : U_ops} (u : U) (lm : list Meq
 .
 
 Definition init_r {Σ : StaticModel} {u_ops : U_ops} (t : TermOver BuiltinOrVar) (t' : TermOver BuiltinOrVar) : R :=
-  let vars : list variable := elements ((vars_of t) ∩ (vars_of t')) in
+  let vars : list variable := elements ((vars_of t) ∪ (vars_of t')) in
   let meqns : list Meqn := (λ v, init_meqn (singleton v) []) <$> vars in
   let u_empty : U := empty in
   let u_missing_up : U := u_insert_many u_empty meqns in
@@ -3725,15 +3725,12 @@ Definition u_subst {Σ : StaticModel} {u_ops : U_ops} (u : U) (sub : SubTMM) : U
   u_map u (λ meqn, meqn_subst meqn sub)
 .
 
-Fixpoint unify_r_aux {Σ : StaticModel} {u_ops : U_ops} (r : R) (n : nat) : option (list Meqn) :=
-  match n with
-    | O => None
-    | S n =>
-      let '(t, u) := r in
+Definition unify_r_step {Σ : StaticModel} {u_ops : U_ops} (r : R) : option (R) :=
+  let '(t, u) := r in
         match elements u with
-          | [] => Some (reverse t)
+          | [] => Some (reverse t, empty)
           | _ => match u_extract_nonempty_m_meqn u with
-                  | None => Some (reverse t ++ elements u)
+                  | None => Some (reverse t ++ elements u, empty)
                   | Some ((s, m), u_rest) => 
                         '(common_part, frontier) ← dec m;
                         let frontier_l := elements frontier in
@@ -3742,10 +3739,29 @@ Fixpoint unify_r_aux {Σ : StaticModel} {u_ops : U_ops} (r : R) (n : nat) : opti
                               let sub : SubTMM := gset_to_gmap common_part s in
                               let u_meqn_reduced := u_insert_many u_rest frontier_l in
                               let u_compactified := compactify u_meqn_reduced in
-                                  unify_r_aux ((meqn_subst (init_meqn s [common_part]) sub)::t, u_subst u_compactified sub) n
+                                  Some ((meqn_subst (init_meqn s [common_part]) sub)::t, u_subst u_compactified sub)
                 end
         end
-  end
+.
+
+Lemma unify_r_valid_r {Σ : StaticModel} {u_ops : U_ops} :
+  ∀ (r r' : R), r_valid r -> unify_r_step r = Some r' -> r_valid r'
+.
+Proof.
+Abort.
+
+Lemma unify_r_equiv_UP {Σ : StaticModel} {u_ops : U_ops} :
+  ∀ (r r' : R), r_valid r -> unify_r_step r = Some r' -> up_of_r r ~up up_of_r r'
+.
+Proof.
+Abort.
+
+Fixpoint unify_r_aux {Σ : StaticModel} {u_ops : U_ops} (r : R) (n : nat) : option (list Meqn) :=
+  let '(t, u) := r in
+    match n with
+      | O => None
+      | S n => unify_r_step r ≫= λ r', unify_r_aux r' n
+    end
 .
 
 Lemma unify_r_aux_n_enough {Σ : StaticModel} {u_ops : U_ops} :
