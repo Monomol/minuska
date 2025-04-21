@@ -3705,17 +3705,18 @@ Fixpoint u_insert_many {Σ : StaticModel} {u_ops : U_ops} (u : U) (lm : list Meq
   end
 .
 
-Definition init_r {Σ : StaticModel} {u_ops : U_ops} (t : TermOver BuiltinOrVar) (t' : TermOver BuiltinOrVar) : R :=
-  let vars : list variable := elements ((vars_of t) ∪ (vars_of t')) in
-  let meqns : list Meqn := (λ v, init_meqn (singleton v) []) <$> vars in
+
+Definition init_r {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver BuiltinOrVar)) : R :=
+  let vars : gset variable := ⋃ (vars_of <$> lt) in
+  let meqns : list Meqn := (λ v, init_meqn (singleton v) []) <$> (elements vars) in
   let u_empty : U := empty in
   let u_missing_up : U := u_insert_many u_empty meqns in
-  let up_meqn : Meqn := init_meqn (singleton (fresh vars)) [t;t'] in
+  let up_meqn : Meqn := init_meqn (singleton (fresh vars)) lt in
     ([], u_insert u_missing_up up_meqn)
 .
 
 Lemma init_r_valid {Σ : StaticModel} {u_ops : U_ops} :
-  ∀ (t t' : TermOver BuiltinOrVar) (r : R), init_r t t' = r -> r_valid r
+  ∀ (t t' : TermOver BuiltinOrVar) (r : R), init_r [t;t'] = r -> r_valid r
 .
 Proof.
 Abort.
@@ -3785,7 +3786,7 @@ Definition unify_r {Σ : StaticModel} {u_ops : U_ops} (r : R) :=
 .
 
 Definition unify_terms {Σ : StaticModel} {u_ops : U_ops} (t : TermOver BuiltinOrVar) (t' : TermOver BuiltinOrVar) : option (list Meqn) :=
-  unify_r (init_r t t')
+  unify_r (init_r [t;t'])
 .
 
 Fixpoint extract_mgu_aux {Σ : StaticModel} (t : T) (sub : SubTMM) : SubTMM :=
