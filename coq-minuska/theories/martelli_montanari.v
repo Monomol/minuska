@@ -3686,6 +3686,7 @@ Definition r_vars_disjoint {Σ : StaticModel} {u_ops : U_ops} (r : R) : Prop :=
     ∀ (meqn meqn' : Meqn),
       meqn ∈ r ->
       meqn' ∈ r ->
+      meqn ≠ meqn' ->
       get_var_part meqn ∩ get_var_part meqn' = ∅
 .
 
@@ -3806,6 +3807,16 @@ Fixpoint extract_mgu_aux {Σ : StaticModel} (t : T) (sub : SubTMM) : SubTMM :=
 Definition extract_mgu {Σ : StaticModel} (t : T) : SubTMM :=
   extract_mgu_aux (reverse t) empty
 .
+
+Lemma extract_mgu_contains_var {Σ : StaticModel} :
+  ∀ (t : T) (sub : SubTMM), t_valid t ->
+    extract_mgu t = sub ->
+    ∀ (v : variable) (t : TermOver BuiltinOrVar), lookup v sub = Some t ->
+    ∀ (v' : variable), v' ∈ vars_of t ->
+    lookup v' sub = None
+.
+Proof.
+Abort.
 
 Lemma sub_is_unifier {Σ : StaticModel} {u_ops : U_ops} :
   ∀ (t t' : TermOver BuiltinOrVar) (r_t : T),
