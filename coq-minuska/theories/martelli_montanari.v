@@ -793,7 +793,7 @@ Class U_ops
     ;
 
     u_extract_nonempty_m_meqn_is_nonempty :
-      ∀ (u u' : U) (meqn : Meqn), u_extract_nonempty_m_meqn u = Some (meqn, u') -> ~~ meqn_m_empty meqn
+      ∀ (u u' : U) (meqn : Meqn), u_extract_nonempty_m_meqn u = Some (meqn, u') -> meqn_m_empty meqn = false
     ;
 
     u_extract_overlapping_meqns :
@@ -1778,7 +1778,7 @@ Qed.
 
 Lemma u_extract_nonempty_m_meqn_is_nonempty_listset {Σ : StaticModel} :
       ∀ (u u' : listset Meqn) (meqn : Meqn),
-        u_extract_nonempty_m_meqn_listset u = Some (meqn, u') -> ~~ meqn_m_empty meqn
+        u_extract_nonempty_m_meqn_listset u = Some (meqn, u') -> meqn_m_empty meqn = false
 .
 Proof.
 intros.
@@ -1804,9 +1804,8 @@ destruct l0.
     discriminate.
   }
   {
-    rewrite eq_true_not_negb_iff in H3.
-    rewrite H3.
-    reflexivity.
+    apply not_true_is_false in H3.
+    assumption.
   }
 }
 Qed.
