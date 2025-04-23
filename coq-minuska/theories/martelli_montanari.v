@@ -3716,7 +3716,7 @@ Definition init_r {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver Builti
 .
 
 Lemma init_r_valid {Σ : StaticModel} {u_ops : U_ops} :
-  ∀ (t t' : TermOver BuiltinOrVar) (r : R), init_r [t;t'] = r -> r_valid r
+  ∀ (lt : list (TermOver BuiltinOrVar)) (r : R), init_r lt = r -> r_valid r
 .
 Proof.
 Abort.
@@ -3785,8 +3785,8 @@ Definition unify_r {Σ : StaticModel} {u_ops : U_ops} (r : R) :=
     unify_r_aux r (u_len + 1)
 .
 
-Definition unify_terms {Σ : StaticModel} {u_ops : U_ops} (t : TermOver BuiltinOrVar) (t' : TermOver BuiltinOrVar) : option (list Meqn) :=
-  unify_r (init_r [t;t'])
+Definition unify_terms {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver BuiltinOrVar)) : option (list Meqn) :=
+  unify_r (init_r lt)
 .
 
 Fixpoint extract_mgu_aux {Σ : StaticModel} (t : T) (sub : SubTMM) : SubTMM :=
@@ -3818,16 +3818,20 @@ Proof.
 Abort.
 
 Lemma sub_is_unifier {Σ : StaticModel} {u_ops : U_ops} :
-  ∀ (t t' : TermOver BuiltinOrVar) (r_t : T),
-    unify_terms t t' = Some r_t ->
+  ∀ (lt : list (TermOver BuiltinOrVar)) (r_t : T),
+    unify_terms lt = Some r_t ->
+    ∀ (t : TermOver BuiltinOrVar), t ∈ lt ->
+    ∀ (t' : TermOver BuiltinOrVar), t' ∈ lt ->
     sub_app_mm (extract_mgu r_t) t = sub_app_mm (extract_mgu r_t) t'
 .
 Proof.
 Abort.
 
 Lemma sub_no_unifier {Σ : StaticModel} {u_ops : U_ops} :
-  ∀ (t t' : TermOver BuiltinOrVar),
-    unify_terms t t' = None ->
+  ∀ (lt : list (TermOver BuiltinOrVar)),
+    unify_terms lt = None ->
+    ∃ (t : TermOver BuiltinOrVar), t ∈ lt ->
+    ∃ (t' : TermOver BuiltinOrVar), t' ∈ lt ->
     ∀ (sub : SubTMM), sub_app_mm sub t ≠ sub_app_mm sub t'
 .
 Proof.
