@@ -3606,6 +3606,7 @@ Definition term_has_same_symbol {Σ : StaticModel} (orig : TermOver BuiltinOrVar
   end
 .
 
+
 Definition dec_make_multeq {Σ : StaticModel} (lv : list (TermOver BuiltinOrVar)) (ln : list (TermOver BuiltinOrVar)) : option Meqn :=
   list_collect (var_term_to_var <$> lv) ≫= fun lv' => Some (list_to_set lv', ln)
 .
@@ -3623,9 +3624,9 @@ Fixpoint dec_aux {Σ : StaticModel} (m : list (TermOver BuiltinOrVar)) (n : nat)
               then
                 match t with
                   | t_over _ => Some (t, empty)
-                  | t_term s _ =>
+                  | t_term s l =>
                       term_args ← mapM term_params m;
-                      ithMs ← Some (transpose (length term_args) term_args);
+                      ithMs ← Some (transpose (length l) term_args);
                       ithMsDeced ← (mapM (λ x, dec_aux x n) ithMs);
                       '(miCParams, miFrontEqs) ← Some (split ithMsDeced);
                       Some (t_term s miCParams, ⋃ miFrontEqs)
@@ -3760,8 +3761,11 @@ Abort.
 Fixpoint unify_r_aux {Σ : StaticModel} {u_ops : U_ops} (r : R) (n : nat) : option (list Meqn) :=
   let '(t, u) := r in
     match n with
-      | O => None
-      | S n => unify_r_step r ≫= λ r', unify_r_aux r' n
+      | O => match elements u with
+              | [] => Some t
+              | _ => None
+            end
+      | S n => unify_r_step r ≫= fun r' => unify_r_aux r' n
     end
 .
 
@@ -3779,7 +3783,7 @@ Lemma unify_r_aux_valid_t {Σ : StaticModel} {u_ops : U_ops} :
 Proof.
 Abort.
 
-Definition unify_r {Σ : StaticModel} {u_ops : U_ops} (r : R) :=
+Definition unify_r {Σ : StaticModel} {u_ops : U_ops} (r : R) : option (list Meqn) :=
   let '(t, u) := r in
   let u_len := length (elements u) in
     unify_r_aux r (u_len + 1)
