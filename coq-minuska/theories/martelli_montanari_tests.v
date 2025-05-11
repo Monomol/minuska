@@ -1,11 +1,9 @@
 From Minuska Require Import
-    prelude
     spec
-    martelli_montanari
-    basic_properties
     empty
-    default_everything
     trivial
+    default_everything
+    martelli_montanari
 .
 
 Instance sm : StaticModel := @DSM mysignature β MyProgramInfo.
