@@ -3741,7 +3741,7 @@ Definition unify_r_step {Σ : StaticModel} {u_ops : U_ops} (r : R) : option (R) 
                               let sub : SubTMM := gset_to_gmap common_part s in
                               let u_meqn_reduced := u_insert_many u_rest frontier_l in
                               let u_compactified := compactify u_meqn_reduced in
-                                  Some ((meqn_subst (init_meqn s [common_part]) sub)::t, u_subst u_compactified sub)
+                                  Some ((init_meqn s [common_part])::t, u_subst u_compactified sub)
                 end
         end
 .
