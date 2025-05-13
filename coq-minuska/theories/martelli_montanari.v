@@ -3855,6 +3855,14 @@ Definition unify_terms {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver B
   unify_r (init_r lt)
 .
 
+Definition take_any {A : Type} (a b : option A) :=
+  match a, b with
+    | Some x, _ => Some x
+    | _, Some x => Some x
+    | _, _ => None
+  end
+.
+
 Fixpoint extract_mgu_aux {Σ : StaticModel} (t : T) (sub : SubTMM) : SubTMM :=
   match t with
     | [] => sub
@@ -3863,7 +3871,7 @@ Fixpoint extract_mgu_aux {Σ : StaticModel} (t : T) (sub : SubTMM) : SubTMM :=
         match head m_sub with
           | None => extract_mgu_aux xs sub
           | Some x =>
-            let new_sub := gset_to_gmap x s in
+            let new_sub := merge take_any (gset_to_gmap x s) sub in
               extract_mgu_aux xs new_sub
         end
   end
