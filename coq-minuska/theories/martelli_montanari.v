@@ -3593,6 +3593,27 @@ ltac1:(pose proof (compactify_by_vars_keep_unifier_of _ _ _ H H0)).
 assumption.
 Qed.
 
+Fixpoint u_insert_many {Σ : StaticModel} {u_ops : U_ops} (u : U) (lm : list Meqn) : U :=
+  match lm with
+    | [] => u
+    | x::xs => u_insert_many (u_insert u x) xs
+  end
+.
+
+Definition u_subst {Σ : StaticModel} {u_ops : U_ops} (u : U) (sub : SubTMM) : U :=
+  u_map (λ meqn, meqn_subst meqn sub) u
+.
+
+Lemma u_subst_keeps_equiv_UP {Σ : StaticModel} {u_ops : U_ops} :
+  ∀ (u : U) (sub : SubTMM),
+    u_valid u ->
+    (∀ (v : variable) (t : TermOver BuiltinOrVar), 
+      lookup v sub = Some t -> (var_to_term v, t) ∈ up_of_u u) ->
+    up_of_u u ~up up_of_u (u_subst u sub)
+.
+Proof.
+Abort.
+
 (* Source of zipWith and transpose: https://gist.github.com/Agnishom/d686ef345d7c7b408362e1d2c9c64581#file-awesomelistlemmas-v
   this repo should contain relevant proofs for the.
   Asked the author via email for permission to use the code below.
@@ -3639,6 +3660,16 @@ Fixpoint dec_aux {Σ : StaticModel} (m : list (TermOver BuiltinOrVar)) (n : nat)
         end
   end
 .
+
+Lemma dec_aux_TermOver_size_enough {Σ : StaticModel} :
+  ∀ (lt : list (TermOver BuiltinOrVar)) (c : TermOver BuiltinOrVar) (f : listset Meqn),
+    dec_aux lt (sum_list_with TermOver_size lt) = Some (c, f) <-> ∃ (sub : SubTMM),
+      Forall
+      (λ t : TermOver BuiltinOrVar, ∀ (t' : TermOver BuiltinOrVar), sub_app_mm sub t = sub_app_mm sub t')
+      ((λ x, sub_app_mm sub x) <$> lt)
+.
+Proof.
+Abort.
 
 Definition dec {Σ : StaticModel} (m : list (TermOver BuiltinOrVar)) : option (TermOver BuiltinOrVar * listset Meqn)%type :=
   dec_aux m (sum_list_with TermOver_size m)
@@ -3719,14 +3750,6 @@ Definition r_valid {Σ : StaticModel} {u_ops : U_ops} (r : R) : Prop :=
     t_valid t ∧ u_valid u ∧ r_vars_disjoint r ∧ r_has_all_vars r
 .
 
-Fixpoint u_insert_many {Σ : StaticModel} {u_ops : U_ops} (u : U) (lm : list Meqn) : U :=
-  match lm with
-    | [] => u
-    | x::xs => u_insert_many (u_insert u x) xs
-  end
-.
-
-
 Definition init_r {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver BuiltinOrVar)) : R :=
   let vars : gset variable := ⋃ (vars_of <$> lt) in
   let meqns : list Meqn := (λ v, init_meqn (singleton v) []) <$> (elements vars) in
@@ -3738,21 +3761,6 @@ Definition init_r {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver Builti
 
 Lemma init_r_valid {Σ : StaticModel} {u_ops : U_ops} :
   ∀ (lt : list (TermOver BuiltinOrVar)) (r : R), init_r lt = r -> r_valid r
-.
-Proof.
-Abort.
-
-
-Definition u_subst {Σ : StaticModel} {u_ops : U_ops} (u : U) (sub : SubTMM) : U :=
-  u_map (λ meqn, meqn_subst meqn sub) u
-.
-
-Lemma u_subst_keeps_equiv_UP {Σ : StaticModel} {u_ops : U_ops} :
-  ∀ (u : U) (sub : SubTMM),
-    u_valid u ->
-    (∀ (v : variable) (t : TermOver BuiltinOrVar), 
-      lookup v sub = Some t -> (var_to_term v, t) ∈ up_of_u u) ->
-    up_of_u u ~up up_of_u (u_subst u sub)
 .
 Proof.
 Abort.
