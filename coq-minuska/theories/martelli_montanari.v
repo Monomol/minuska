@@ -3604,6 +3604,14 @@ Definition u_subst {Σ : StaticModel} {u_ops : U_ops} (u : U) (sub : SubTMM) : U
   u_map (λ meqn, meqn_subst meqn sub) u
 .
 
+Lemma u_subst_keeps_u_valid {Σ : StaticModel} {u_ops : U_ops} :
+  ∀ (u : U) (sub : SubTMM),
+    u_valid u ->
+    u_valid (u_subst u sub)
+.
+Proof.
+Abort.
+
 Lemma u_subst_keeps_equiv_UP {Σ : StaticModel} {u_ops : U_ops} :
   ∀ (u : U) (sub : SubTMM),
     u_valid u ->
@@ -3750,17 +3758,33 @@ Definition r_valid {Σ : StaticModel} {u_ops : U_ops} (r : R) : Prop :=
     t_valid t ∧ u_valid u ∧ r_vars_disjoint r ∧ r_has_all_vars r
 .
 
-Definition init_r {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver BuiltinOrVar)) : R :=
+Definition init_r' {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver BuiltinOrVar)) : (R * variable)%type :=
   let vars : gset variable := ⋃ (vars_of <$> lt) in
   let meqns : list Meqn := (λ v, init_meqn (singleton v) []) <$> (elements vars) in
   let u_empty : U := empty in
   let u_missing_up : U := u_insert_many u_empty meqns in
-  let up_meqn : Meqn := init_meqn (singleton (fresh vars)) lt in
-    ([], u_insert u_missing_up up_meqn)
+  let fresh_var : variable := fresh vars in
+  let up_meqn : Meqn := init_meqn (singleton (fresh_var)) lt in
+    (([], u_insert u_missing_up up_meqn), fresh_var)
+.
+
+Definition init_r {Σ : StaticModel} {u_ops : U_ops} (lt : list (TermOver BuiltinOrVar)) : R :=
+  (init_r' lt).1
 .
 
 Lemma init_r_valid {Σ : StaticModel} {u_ops : U_ops} :
-  ∀ (lt : list (TermOver BuiltinOrVar)) (r : R), init_r lt = r -> r_valid r
+  ∀ (lt : list (TermOver BuiltinOrVar)) (r : R),
+    forallb term_is_nonvar lt = true ->
+    r_valid (init_r lt)
+.
+Proof.
+Abort.
+
+Lemma init_r_keeps_UP {Σ : StaticModel} {u_ops : U_ops} :
+  ∀ (lt : list (TermOver BuiltinOrVar)),
+    forallb term_is_nonvar lt = true ->
+    ∀ (r : R) (v : variable), init_r' lt = (r, v) ->
+    up_of_terms ((var_to_term v)::lt) ~up up_of_r r
 .
 Proof.
 Abort.
