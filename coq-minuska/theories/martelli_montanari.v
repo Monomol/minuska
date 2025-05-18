@@ -3115,7 +3115,7 @@ destruct (decide (x ∈ elements u)) as [H2 | H2].
 }
 Qed.
 
-Lemma compcatify_by_var_keeps_up_of_u {Σ : StaticModel} {u_ops : U_ops} :
+Lemma compactify_by_var_keeps_up_of_u {Σ : StaticModel} {u_ops : U_ops} :
   ∀ (u u' : U) (v : variable), compactify_by_var u_ops u v = u' ->
   u_valid u ->
   up_of_u u ⊆ up_of_u u'
@@ -3153,7 +3153,7 @@ destruct (decide (meqn ∈ elements u')) as [H5 | H5].
 }
 Qed.
 
-Lemma compcatify_by_var_keeps_unifier_of {Σ : StaticModel} {u_ops : U_ops} :
+Lemma compactify_by_var_keeps_unifier_of {Σ : StaticModel} {u_ops : U_ops} :
   ∀ (u u' : U) (v : variable), compactify_by_var u_ops u v = u' ->
   u_valid u ->
   ∀ (s : SubTMM), is_unifier_of s (elements (up_of_u u)) <-> is_unifier_of s (elements (up_of_u u'))
@@ -3231,7 +3231,7 @@ split.
     apply (H1 _ H3).
   }
   {
-    ltac1:(pose proof (compcatify_by_var_keeps_up_of_u _ _ _ H H0)).
+    ltac1:(pose proof (compactify_by_var_keeps_up_of_u _ _ _ H H0)).
     rewrite elem_of_subseteq in H4.
     rewrite elem_of_elements in H2, H3.
     specialize (H4 x H2).
@@ -3509,14 +3509,14 @@ induction lv.
 }
 Qed.
 
-Lemma compactify_by_vars_keep_unifier_of {Σ : StaticModel} {u_ops : U_ops} :
+Lemma compactify_by_vars_keeps_equiv_UP {Σ : StaticModel} {u_ops : U_ops} :
   ∀ (u u' : U) (lv : list variable), compactify_by_vars u_ops u lv = u' ->
-  u_valid u ->
-  ∀ (s : SubTMM), is_unifier_of s (elements (up_of_u u)) <-> is_unifier_of s (elements (up_of_u u'))
+  u_valid u -> up_of_u u ~up up_of_u u'
 .
 Proof.
 intros u u' lv.
 revert u u'.
+unfold equiv_UP.
 induction lv.
 {
   intros.
@@ -3531,7 +3531,7 @@ induction lv.
   symmetry in HeqCBVA.
   ltac1:(pose proof (compactify_by_var_keeps_u_valid _ _ _ HeqCBVA H0)).
   specialize (IHlv CBVA u' H H1 s).
-  ltac1:(pose proof (compcatify_by_var_keeps_unifier_of _ _ _ HeqCBVA H0 s)).
+  ltac1:(pose proof (compactify_by_var_keeps_unifier_of _ _ _ HeqCBVA H0 s)).
   rewrite <- H2 in IHlv.
   assumption.
 }
@@ -3587,9 +3587,8 @@ Lemma compactify_keeps_equiv_UP {Σ : StaticModel} {u_ops : U_ops} :
 .
 Proof.
 intros.
-unfold equiv_UP.
 unfold compactify in H.
-ltac1:(pose proof (compactify_by_vars_keep_unifier_of _ _ _ H H0)).
+ltac1:(pose proof (compactify_by_vars_keeps_equiv_UP _ _ _ H H0)).
 assumption.
 Qed.
 
